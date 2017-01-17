@@ -15,6 +15,22 @@ select * from SCORE where cno in(
 (select A.cno from COURSE A join TEACHER B on A.TNO=B.TNO 
  WHERE B.TNAME='张旭')
 ```
----
+##24、查询选修某课程的同学人数多于5人的教师姓名。
+
+
+##25、查询95033班和95031班全体学生的记录。
+```sql
+select * from STUDENT where class in ('95033','95031') order by class
+```
 
 ##26、查询存在有85分以上成绩的课程Cno.
+```sql
+select cno from SCORE group by cno having max(degree)>85
+```
+
+##27、查询出“计算机系“教师所教课程的成绩表。
+```sql
+select A.* from SCORE A join (TEACHER B,COURSE C) on A.cno=C.CNO and C.tno=b.tno
+where b.depart='计算机系'
+```
+

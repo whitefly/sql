@@ -16,7 +16,16 @@ select * from SCORE where cno in(
  WHERE B.TNAME='张旭')
 ```
 ##24、查询选修某课程的同学人数多于5人的教师姓名。
-
+```sql
+select tname from TEACHER where tno in(
+select A.tno from COURSE A join SCORE B on A.cno=B.cno 
+group by A.tno having count(*)>5)
+```
+或者同时3表相连，不过这种方式我不太习惯。（还是偏向于一次只连2个表,然后在第三表中查询）。不过这种方式会比上面的快一点~why？
+```sql
+select t.tname,count(*) from TEACHER T join (COURSE C,SCORE S)on (C.cno=S.cno and C.TNO=T.tno)
+group by t.tname having count(*)>5
+```
 
 ##25、查询95033班和95031班全体学生的记录。
 ```sql
@@ -30,7 +39,18 @@ select cno from SCORE group by cno having max(degree)>85
 
 ##27、查询出“计算机系“教师所教课程的成绩表。
 ```sql
-select A.* from SCORE A join (TEACHER B,COURSE C) on A.cno=C.CNO and C.tno=b.tno
+select A.* from SCORE A join (TEACHER B,COURSE C) on （A.cno=C.CNO and C.tno=b.tno）
 where b.depart='计算机系'
 ```
+##28、查询“计算机系”中，与“电子工程系“已有职称不同的职称的教师的Tname和Prof
+```sql
+select tname,PROF from TEACHER where DEPART='计算机系'
+and PROF not in 
+(select PROF from TEACHER where DEPART='电子工程系')
+```
 
+##29、查询选修编号为“3-105“课程且成绩至少高于一个选修编号为“3-245”的同学的Cno、Sno和Degree,并按Degree从高到低次序排序。
+```sql
+SELECT * FROM SCORE WHERE cno='3-105' and DEGREE>ANY(SELECT DEGREE FROM SCORE WHERE CNO='3-245') ORDER BY DEGREE DESC
+```
+其实我的第一反应是建立第一个自连接， 左边大于min（右边） 但是min（）为聚焦函数，自连接中无法使用。于是强行group by

@@ -51,6 +51,23 @@ and PROF not in
 
 ##29、查询选修编号为“3-105“课程且成绩至少高于一个选修编号为“3-245”的同学的Cno、Sno和Degree,并按Degree从高到低次序排序。
 ```sql
-SELECT * FROM SCORE WHERE cno='3-105' and DEGREE>ANY(SELECT DEGREE FROM SCORE WHERE CNO='3-245') ORDER BY DEGREE DESC
+SELECT * FROM SCORE WHERE cno='3-105' and DEGREE>ANY(SELECT DEGREE FROM SCORE WHERE CNO='3-245') 
+ORDER BY DEGREE DESC
 ```
+
 其实我的第一反应是建立第一个自连接， 左边大于min（右边） 但是min（）为聚焦函数，自连接中无法使用。于是强行group by
+于是强行group。出现了下面的sql。使用grouby的坏处就是不能随意显示select属性了
+```sql
+select s1.SNO,s1.DEGREE  from SCORE s1 join SCORE s2 on s1.CNO='3-105'and s2.cno='3-245'  --返回了笛卡尔积
+group by s1.SNO,s1.DEGREE having s1.DEGREE>min(s2.DEGREE)   --强行groupby
+ORDER BY DEGREE DESC
+```
+
+##30、查询选修编号为“3-105”且成绩高于所有选修编号为“3-245”课程的同学的Cno、Sno和Degree.
+```sql
+SELECT * FROM SCORE WHERE cno='3-105' and DEGREE>all(SELECT DEGREE FROM SCORE WHERE CNO='3-245')
+```
+##31、查询所有教师和同学的name、sex和birthday.
+```sql
+
+```

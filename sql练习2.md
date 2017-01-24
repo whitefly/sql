@@ -88,6 +88,8 @@ Show the name and per-capita GDP for those countries with a GDP of at least one 
 Show per-capita GDP for the trillion dollar countries to the nearest $1000.
 想法：人均gdp，在千位四舍五入 
 round() 正参数在小数点后四舍五入，负参数代表小数前四舍五入
+向上取整为ceiling，向下取整是floor 
+不过貌似不能定义取整的位置
 ```sql
 select name,round(gdp/population,-3) per_gdp  from world
 where gdp>1e12
@@ -311,3 +313,149 @@ set @p=(select population from world where name='Germany');
 select name,concat(round(100*population/@p),'%')  from world 
 where continent ='Europe'
 ```
+##6.
+Which countries have a GDP greater than every country in Europe? [Give the name only.] (Some countries may have NULL gdp values)
+1聚焦函数对null的处理
+`avg，sum，max和min都会忽略null值`
+count(\*)计算行数（不忽略null），count(属性名)忽略null
+```sql
+ select name from world
+ where gdp >(select max(gdp) from world where continent ='Europe' )
+```
+
+##7.
+Find the largest country (by area) in each continent, show the continent, the name and the area:
+```sql
+select continent,name,area from world w1
+where area = (select max(area) from world w2 where w1.continent =w2.continent)
+```
+
+##8.
+List each continent and the name of the country that comes first alphabetically.
+1 题目意思：每一个大洲中按首字母排序的第一个国家
+1 解题：min和max函数也可用于字符串，首字符按a-z从小到大 min会取出首字符最小的
+```sql
+select continent ,min(name)  from world
+group by continent 
+```
+
+##9.
+Find the continents where all countries have a population <= 25000000. Then find the names of the countries associated with these continents. Show name, continent and population.
+```sql
+select name,continent,population from world where continent in
+(select continent from world 
+group by continent having max(population)<=25e6)
+```
+直观逻辑的东西可能运行比较慢
+如果看做一行一行筛选，如果出现子列满足某条件的，就考虑成立
+exist看做通过子列的count来判断是否通过筛选
+反正怎么样都逃不开w1.continent = w2.continent
+```sql
+select name,continent ,population from world w1
+where not exists  (select * from world w2 
+                                       where w1.continent = w2.continent 
+                                         and w2.population >25e6)
+-- 或者使用all或者max                                        
+select name ,continent ,population from world w1 
+where 25e6 >=all(select population from world w2 
+                                            where w2.continent = w1.continent ) 
+```
+**把sql看做一行一行的筛选，where后面的条件判断只会返回0或1来判断单行是否通过筛选**
+
+##10.
+Some countries have populations more than three times that of any of their neighbours (in the same continent). Give the countries and continents.
+解题：比相同洲的其他国家都要多3倍，所以要排除自己
+```sql
+select name, continent from world w1
+where population/3 >all(select population from world w2 
+                                where w1.continent = w2.continent 
+                                  and w1.name !=w2.name)
+```
+
+# [SUM and COUNT](http://sqlzoo.net/wiki/SUM_and_COUNT)
+
+##1.
+Show the total population of the world.
+```sql
+SELECT SUM(population)
+FROM world
+```
+
+##2.
+List all the continents - just once each.
+```sql
+select distinct continent from world
+```
+
+##3.
+Give the total GDP of Africa
+```sql
+select sum(gdp) from world
+where continent='Africa'
+```
+
+##4.
+How many countries have an area of at least 1000000
+```sql
+select count(*) from world
+where area>=1e6
+```
+
+##5.
+What is the total population of ('France','Germany','Spain')
+```sql
+select sum(population) from world
+where name in ('France','Germany','Spain')
+```
+
+##6.
+For each continent show the continent and number of countries.
+```sql
+select continent,count(name) from world
+group by continent
+```
+
+##7.
+For each continent show the continent and number of countries with populations of at least 10 million.
+```sql
+select continent,count(name) from world
+where population>=10e6
+group by continent
+```
+
+##8.
+List the continents that have a total population of at least 100 million.
+```sql
+select continent from world 
+group by continent 
+                   having  sum(population)>=100e6
+```
+
+# [The JOIN operation](http://sqlzoo.net/wiki/The_JOIN_operation)
+
+##1.
+Modify it to show the matchid and player name for all goals scored by Germany. To identify German players, check for: teamid = 'GER'
+```sql
+select matchid,player from goal
+ where teamid='ger'
+```
+
+##2.
+From the previous query you can see that Lars Bender's scored a goal in game 1012. Now we want to know what teams were playing in that match.
+Notice in the that the column matchid in the goal table corresponds to the id column in the game table. We can look up information about game 1012 by finding that row in the game table.
+Show id, stadium, team1, team2 for just game 1012
+```sql
+SELECT id,stadium,team1,team2
+  FROM game 
+  where id='1012'
+```
+
+##3
+Modify it to show the player, teamid, stadium and mdate and for every German goal.
+```sql
+SELECT  player,teamid,stadium,mdate
+  FROM game JOIN goal ON (id=matchid)
+  where goal.teamid='ger'
+```
+
+##

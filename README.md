@@ -1,2 +1,4 @@
 # sql
-# 用来练习sql语句， 48道题 http://blog.csdn.net/qaz13177_58_/article/details/5575711/
+用来练习sql语句
+数据分析师必备，sql大法好呀
+O(∩_∩)O哈哈~
